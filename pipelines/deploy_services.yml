@@ -47,12 +47,6 @@ jobs:
           instructions: 'Controleer de output van terraform plan in de vorige stap. Akkoord met de wijziging? Klik dan op resume.'
           onTimeout: 'reject'
 
-      - task: PublishPipelineArtifact@1
-        displayName: 'Publish TFPlan artifact'
-        inputs:
-          targetPath: ${{parameters.workingDirectory}}
-          artifact: tfartifact-$(customer)
-
   - job: Deployment
     dependsOn: 
     - Approval
