@@ -14,8 +14,6 @@ pool:
 
 stages:
   - stage: validate_templates
-    dependsOn:
-    - Init_agent   
     jobs:
       - template: validate_templates.yml
         parameters:

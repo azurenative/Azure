@@ -5,13 +5,26 @@ parameters:
 jobs:
   - job: Plan
     steps:
-      - script: terraform init
-        workingDirectory: ${{parameters.workingDirectory}}
-        displayName: Initialize terraform backend
-
-      - script: terraform plan -input=false
-        workingDirectory: ${{parameters.workingDirectory}}
-        displayName: Plan the infrastructure
+      - checkout: self
+      - task: TerraformInstaller@0
+        displayName: 'install Terraform latest'
+      - task: TerraformCLI@0
+        displayName: 'init'
+        inputs:
+          command: init
+          backendType: azurerm
+          workingDirectory: $(workingDirectory)
+          backendServiceArm: $(azdoserviceconnection)
+          environmentServiceName: $(azdoserviceconnection)
+      - task: TerraformCLI@0
+        displayName: 'plan'
+        inputs:
+          command: 'plan'
+          commandOptions: '-input=false -var-file="$(customer)/$(customer).tfvars"'    
+          backendType: azurerm      
+          workingDirectory: $(workingDirectory)
+          backendServiceArm: $(azdoserviceconnection)
+          environmentServiceName: $(azdoserviceconnection)   
         env:
           TF_VAR_azadclient_id: $(azad_client_id)
           TF_VAR_azadclient_secret: $(azad_client_secret)
@@ -19,7 +32,7 @@ jobs:
           TF_VAR_client_id: $(infpaysygo_client_id)
           TF_VAR_client_secret: $(infpaysygo_client_secret)
           TF_VAR_tenant_id: $(infpaysygo_tenant_id)
-          TF_VAR_subscription_id: $(infpaysygo_subscription_id)          
+          TF_VAR_subscription_id: $(infpaysygo_subscription_id)       
       
   - job: Approval
     pool: server # Agentless job
@@ -34,22 +47,36 @@ jobs:
           instructions: 'Controleer de output van terraform plan in de vorige stap. Akkoord met de wijziging? Klik dan op resume.'
           onTimeout: 'reject'
 
+      - task: PublishPipelineArtifact@1
+        displayName: 'Publish TFPlan artifact'
+        inputs:
+          targetPath: ${{parameters.workingDirectory}}
+          artifact: tfartifact-$(customer)
+
   - job: Deployment
     dependsOn: 
     - Approval
     steps:
-    - script: terraform init
-      workingDirectory: ${{parameters.workingDirectory}}
-      displayName: Initialize terraform backend
-    - script:
-        terraform apply -auto-approve -input=false
-      workingDirectory: ${{parameters.workingDirectory}}
-      displayName: Apply the infrastructure (auto approve)
-      env:
-        TF_VAR_azadclient_id: $(azad_client_id)
-        TF_VAR_azadclient_secret: $(azad_client_secret)
-        TF_VAR_azadtenant_id: $(azad_tenant_id)
-        TF_VAR_client_id: $(infpaysygo_client_id)
-        TF_VAR_client_secret: $(infpaysygo_client_secret)
-        TF_VAR_tenant_id: $(infpaysygo_tenant_id)
-        TF_VAR_subscription_id: $(infpaysygo_subscription_id)
+      - task: TerraformInstaller@0
+        displayName: 'install Terraform latest'
+      - task: TerraformCLI@0
+        displayName: 'init'
+        inputs:
+          command: init
+          backendType: azurerm
+          workingDirectory: $(workingDirectory)
+          backendServiceArm: $(azdoserviceconnection)
+          environmentServiceName: $(azdoserviceconnection)
+      - task: TerraformCLI@0
+        displayName: 'apply'
+        inputs:
+          command: 'apply'
+          commandOptions: '-input=false -auto-approve -var-file="$(customer)/$(customer).tfvars"'
+        env:
+          TF_VAR_azadclient_id: $(azad_client_id)
+          TF_VAR_azadclient_secret: $(azad_client_secret)
+          TF_VAR_azadtenant_id: $(azad_tenant_id)
+          TF_VAR_client_id: $(infpaysygo_client_id)
+          TF_VAR_client_secret: $(infpaysygo_client_secret)
+          TF_VAR_tenant_id: $(infpaysygo_tenant_id)
+          TF_VAR_subscription_id: $(infpaysygo_subscription_id)
