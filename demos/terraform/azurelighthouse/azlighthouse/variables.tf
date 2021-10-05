@@ -54,24 +54,6 @@ variable "azureadgroups" {
     display_name     = string
     description = string
   }))
-    default = {
-        "maz902-prhs-deployment" = {
-            display_name = "maz902-prhs-deployment"
-            description = "This AZAD Group contains App Registration to deploy resources within the subscription"
-        }
-        "maz902-prhs-development" = {
-            display_name = "maz902-prhs-development"
-            description = "This AZAD Group contains user principals of the developers team"
-        }
-        "maz902-prhs-operations" = {
-            display_name = "maz902-prhs-operations"
-            description = "This AZAD Group contains user principals of the Operations team"
-        }
-        "maz902-prhs-AVDoperations" = {
-            display_name = "maz902-prhs-AVDoperations"
-            description = "This AZAD Group contains user principals of the AVD Operations team"
-        }
-    }
 }
 
 #### azure ad user objects ####
@@ -79,23 +61,6 @@ variable "azadusers_developmentteam" {
   type = map(object({
     user_principal_name = string    
   }))
-    default = {        
-        "user1" = {
-            user_principal_name = "az-tahsinj@pinkroccadehostingservices.onmicrosoft.com"
-        }
-        "user2" = {
-            user_principal_name = "az-hienenj@pinkroccadehostingservices.onmicrosoft.com"
-        }
-        "user3" = {
-            user_principal_name = "az-kimmenaedem@pinkroccadehostingservices.onmicrosoft.com"
-        }
-        "user4" = {
-            user_principal_name = "az-cramerp@pinkroccadehostingservices.onmicrosoft.com"            
-        }
-        "user5" = {
-          user_principal_name = "az-gelders@pinkroccadehostingservices.onmicrosoft.com"
-        }
-    }
 }
 
 variable "tenant_subscription_scope"{

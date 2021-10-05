@@ -17,30 +17,31 @@ terraform {
   }
 }
 
+resource "azuread_group" "infpasygo-azn-azadgroups" {
+  for_each                = var.azureadgroups
+  display_name            = each.value["display_name"]
+  description             = each.value["description"]
+  security_enabled        = true
+  prevent_duplicate_names = true
+}
+
 data "azuread_service_principal" "appreg" {
   display_name = "spn-aznative-t"
+  depends_on = [
+    azuread_group.infpasygo-azn-azadgroups
+  ]
 }
 
 data "azuread_user" "azadusers_objectids" {
   for_each            = var.azadusers_developmentteam
   user_principal_name = each.value["user_principal_name"]
+    depends_on = [
+    azuread_group.infpasygo-azn-azadgroups
+  ]
 }
 
-data "azuread_group" "deployment_principal_id" {
-  display_name = "infpasygo-azn-deployment"
-}
 
-data "azuread_group" "development_principal_id" {
-  display_name = "infpasygo-azn-development"
-}
 
-data "azuread_group" "operations_principal_id" {
-  display_name = "infpasygo-azn-operations"
-}
-
-data "azuread_group" "AVDoperations_principal_id" {
-  display_name = "infpasygo-azn-AVDoperations"
-}
 
 # data "azurerm_resource_group" "maz902-rg-t0003" {
 #   name = "maz902-rg-t0003"
@@ -50,12 +51,19 @@ data "azuread_group" "AVDoperations_principal_id" {
 # }
 
 ## using output from resource.
-resource "azuread_group" "infpasygo-azn-azadgroups" {
-  for_each                = var.azureadgroups
-  display_name            = each.value["display_name"]
-  description             = each.value["description"]
-  security_enabled        = true
-  prevent_duplicate_names = true
+
+data "azuread_group" "deployment_principal_id" {
+  display_name = "infpasygo-azn-deployment"
+    depends_on = [
+    azuread_group.infpasygo-azn-azadgroups
+  ]
+}
+
+data "azuread_group" "development_principal_id" {
+  display_name = "infpasygo-azn-development"
+    depends_on = [
+    azuread_group.infpasygo-azn-azadgroups
+  ]
 }
 
 resource "azuread_group_member" "add-serviceprincipal" {
@@ -118,7 +126,20 @@ resource "azurerm_lighthouse_assignment" "deploymentgroup" {
     azurerm_lighthouse_definition.deploymentgroup, azurerm_lighthouse_definition.developmentgroup, azurerm_lighthouse_assignment.developmentgroup
   ]
 }
+# azure lighthouse definition & assignments resource group scope #
+# data "azuread_group" "operations_principal_id" {
+#   display_name = "infpasygo-azn-operations"
+#     depends_on = [
+#     azuread_group.infpasygo-azn-azadgroups
+#   ]
+# }
 
+# data "azuread_group" "AVDoperations_principal_id" {
+#   display_name = "infpasygo-azn-AVDoperations"
+#     depends_on = [
+#     azuread_group.infpasygo-azn-azadgroups
+#   ]
+# }
 # resource "azurerm_lighthouse_definition" "operationsgroup" {
 #   name               = "Azurenative MSP"
 #   description        = "delegated access resource"

@@ -1,0 +1,32 @@
+parameters:
+- name: workingDirectory
+  type: string
+  default: ""
+- name: jobname
+  type: string
+  default: ""
+
+jobs:
+  - job: ${{parameters.jobname}}    
+    steps:
+      - task: TerraformInstaller@0
+        displayName: 'install Terraform latest'
+      - task: TerraformCLI@0
+        displayName: 'init'                
+        inputs:
+          command: init
+          backendType: azurerm
+          backendServiceArm: $(backend_service_arm)
+          backendAzureRmKey: $(backend_key)
+          backendAzureRmResourceGroupName: $(backend_resource_group_name)
+          backendAzureRmStorageAccountName: $(backend_storage_account_name)
+          backendAzureRmContainerName: $(backend_container_name)
+          workingDirectory: ${{parameters.workingDirectory}}
+          allowTelemetryCollection: false
+
+      - task: TerraformCLI@0
+        displayName: 'validate'
+        inputs:
+          backendType: azurerm
+          command: 'validate'
+          workingDirectory: ${{parameters.workingDirectory}}
