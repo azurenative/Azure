@@ -14,8 +14,8 @@ jobs:
           command: init
           backendType: azurerm
           workingDirectory: $(workingDirectory)
-          backendServiceArm: $(azdoserviceconnection)
-          environmentServiceName: $(azdoserviceconnection)
+          backendServiceArm: azdoserviceconnection
+          environmentServiceName: azdoserviceconnection
       - task: TerraformCLI@0
         displayName: 'plan'
         inputs:
@@ -23,8 +23,8 @@ jobs:
           commandOptions: '-input=false -var-file="$(customer)/$(customer).tfvars"'    
           backendType: azurerm      
           workingDirectory: $(workingDirectory)
-          backendServiceArm: $(azdoserviceconnection)
-          environmentServiceName: $(azdoserviceconnection)   
+          backendServiceArm: azdoserviceconnection
+          environmentServiceName: azdoserviceconnection
         env:
           TF_VAR_azadclient_id: $(azad_client_id)
           TF_VAR_azadclient_secret: $(azad_client_secret)
@@ -59,8 +59,8 @@ jobs:
           command: init
           backendType: azurerm
           workingDirectory: $(workingDirectory)
-          backendServiceArm: $(azdoserviceconnection)
-          environmentServiceName: $(azdoserviceconnection)
+          backendServiceArm: azdoserviceconnection
+          environmentServiceName: azdoserviceconnection
       - task: TerraformCLI@0
         displayName: 'apply'
         inputs:
