@@ -13,18 +13,27 @@ jobs:
         inputs:
           command: init
           backendType: azurerm
-          workingDirectory: $(workingDirectory)
-          backendServiceArm: azdoserviceconnection
-          environmentServiceName: azdoserviceconnection
+          backendServiceArm: $(backend_service_arm)
+          backendAzureRmKey: $(backend_key)
+          backendAzureRmResourceGroupName: $(backend_resource_group_name)
+          backendAzureRmStorageAccountName: $(backend_storage_account_name)
+          backendAzureRmContainerName: $(backend_container_name)
+          workingDirectory: ${{parameters.workingDirectory}}
+          allowTelemetryCollection: false
+
       - task: TerraformCLI@0
         displayName: 'plan'
         inputs:
           command: 'plan'
           commandOptions: '-input=false -var-file="$(customer)/$(customer).tfvars"'    
-          backendType: azurerm      
-          workingDirectory: $(workingDirectory)
-          backendServiceArm: azdoserviceconnection
-          environmentServiceName: azdoserviceconnection
+          backendType: azurerm
+          backendServiceArm: $(backend_service_arm)
+          backendAzureRmKey: $(backend_key)
+          backendAzureRmResourceGroupName: $(backend_resource_group_name)
+          backendAzureRmStorageAccountName: $(backend_storage_account_name)
+          backendAzureRmContainerName: $(backend_container_name)
+          workingDirectory: ${{parameters.workingDirectory}}
+          allowTelemetryCollection: false
         env:
           TF_VAR_azadclient_id: $(azad_client_id)
           TF_VAR_azadclient_secret: $(azad_client_secret)
@@ -32,7 +41,11 @@ jobs:
           TF_VAR_client_id: $(infpaysygo_client_id)
           TF_VAR_client_secret: $(infpaysygo_client_secret)
           TF_VAR_tenant_id: $(infpaysygo_tenant_id)
-          TF_VAR_subscription_id: $(infpaysygo_subscription_id)       
+          TF_VAR_subscription_id: $(infpaysygo_subscription_id)
+          TF_VAR_backend_container_name: $(backend_container_name)
+          TF_VAR_backend_storage_account_name: $(backend_storage_account_name)
+          TF_VAR_backend_resource_group_name: $(backend_resource_group_name)
+          TF_VAR_backend_key: $(backend_key)      
       
   - job: Approval
     pool: server # Agentless job
@@ -58,14 +71,20 @@ jobs:
         inputs:
           command: init
           backendType: azurerm
-          workingDirectory: $(workingDirectory)
-          backendServiceArm: azdoserviceconnection
-          environmentServiceName: azdoserviceconnection
+          backendServiceArm: $(backend_service_arm)
+          backendAzureRmKey: $(backend_key)
+          backendAzureRmResourceGroupName: $(backend_resource_group_name)
+          backendAzureRmStorageAccountName: $(backend_storage_account_name)
+          backendAzureRmContainerName: $(backend_container_name)
+          workingDirectory: ${{parameters.workingDirectory}}
+          allowTelemetryCollection: false
+
       - task: TerraformCLI@0
         displayName: 'apply'
         inputs:
           command: 'apply'
-          commandOptions: '-input=false -auto-approve -var-file="$(customer)/$(customer).tfvars"'
+          commandOptions: '-input=false -var-file="$(customer)/$(customer).tfvars"'
+          workingDirectory: ${{parameters.workingDirectory}}
         env:
           TF_VAR_azadclient_id: $(azad_client_id)
           TF_VAR_azadclient_secret: $(azad_client_secret)
@@ -74,3 +93,7 @@ jobs:
           TF_VAR_client_secret: $(infpaysygo_client_secret)
           TF_VAR_tenant_id: $(infpaysygo_tenant_id)
           TF_VAR_subscription_id: $(infpaysygo_subscription_id)
+          TF_VAR_backend_container_name: $(backend_container_name)
+          TF_VAR_backend_storage_account_name: $(backend_storage_account_name)
+          TF_VAR_backend_resource_group_name: $(backend_resource_group_name)
+          TF_VAR_backend_key: $(backend_key)   

@@ -7,23 +7,26 @@ parameters:
   default: ""
 
 jobs:
-  - job: ${{parameters.jobname}}
-    container: tf-image
+  - job: ${{parameters.jobname}}    
     steps:
-      - script: terraform init
-        workingDirectory: ${{parameters.workingDirectory}}
-        displayName: Initialize terraform backend
-        env:
-          ARM_ACCESS_KEY: $(maz902-test-tf-armaccesskey)
-      - script: terraform validate
-        workingDirectory: ${{parameters.workingDirectory}}
-        displayName: Validate terraform configuration
-      - script: terraform fmt
-        workingDirectory: ${{parameters.workingDirectory}}
-        displayName: Auto format terraform code
-      - script: tflint
-        workingDirectory: ${{parameters.workingDirectory}}
-        displayName: Check for code smells with Tflint
-      - script: checkov --quiet --compact --directory .
-        workingDirectory: ${{parameters.workingDirectory}}
-        displayName: Scanning code with Checkov
+      - task: TerraformInstaller@0
+        displayName: 'install Terraform latest'
+      - task: TerraformCLI@0
+        displayName: 'init'                
+        inputs:
+          command: init
+          backendType: azurerm
+          backendServiceArm: $(backend_service_arm)
+          backendAzureRmKey: $(backend_key)
+          backendAzureRmResourceGroupName: $(backend_resource_group_name)
+          backendAzureRmStorageAccountName: $(backend_storage_account_name)
+          backendAzureRmContainerName: $(backend_container_name)
+          workingDirectory: ${{parameters.workingDirectory}}
+          allowTelemetryCollection: false
+
+      - task: TerraformCLI@0
+        displayName: 'validate'
+        inputs:
+          backendType: azurerm
+          command: 'validate'
+          workingDirectory: ${{parameters.workingDirectory}}

@@ -4,10 +4,7 @@ variables:
 trigger:
   branches:
     include:
-    - feature/*
-  paths:
-    include:
-    - services/azlighthouse/
+    - master
 
 pool:
    vmImage: windows-latest
@@ -18,11 +15,11 @@ stages:
       - template: validate_templates.yml
         parameters:
           workingDirectory: 'services/azlighthouse/'
-          jobname: 'servicestest'
+          jobname: 'services'
 
-  - stage: Deploying_Services
+  - stage: Deploy
     dependsOn: 
-    - Deploying_Infrastructure
+    - validate_templates
     jobs:
       - template: deploy_services.yml
         parameters:
