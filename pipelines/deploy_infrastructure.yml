@@ -1,0 +1,55 @@
+parameters:
+- name: workingDirectory
+  type: string
+
+jobs:
+  - job: Plan
+    container: tf-image
+    steps:
+    - script: terraform init
+      workingDirectory: ${{parameters.workingDirectory}}
+      displayName: Initialize terraform backend
+      env:
+        ARM_ACCESS_KEY: $(maz902-test-tf-armaccesskey)
+        
+    - script: terraform plan -input=false
+      workingDirectory: ${{parameters.workingDirectory}}
+      displayName: Plan the infrastructure
+      env:
+        TF_VAR_client_id: $(maz902-test-tf-clientid)
+        TF_VAR_client_secret: $(maz902-test-tf-client-secret)
+        TF_VAR_subscription_id: $(maz902-test-tf-subscriptionid)
+        TF_VAR_tenant_id: $(maz902-test-tf-tenantid)
+        TF_VAR_acr_password: $(maz902-test-tf-acrpassword)
+        TF_VAR_hub_subscription_id: $(maz902-test-tf-hubsubscriptionid)
+        ARM_ACCESS_KEY: $(maz902-test-tf-armaccesskey)
+
+  - job: Approval
+    pool: server # Agentless job
+    dependsOn:
+    - Plan
+    steps:
+      - task: ManualValidation@0
+        timeoutInMinutes: 1440 # task times out in 1 day
+        inputs:
+          notifyUsers: |                
+            'joe.tahsin@pinkroccade.nl'
+          instructions: 'Controleer de output van terraform plan in de vorige stap. Akkoord met de wijziging? Klik dan op resume.'
+          onTimeout: 'reject'
+
+  - job: Deploy
+    container: tf-image
+    dependsOn:
+    - Approval
+    steps:
+    - script:
+        terraform apply -auto-approve -input=false
+      workingDirectory: ${{parameters.workingDirectory}}
+      displayName: Apply the infrastructure (auto approve)
+      env:
+        TF_VAR_client_id: $(maz902-test-tf-clientid)
+        TF_VAR_client_secret: $(maz902-test-tf-client-secret)
+        TF_VAR_tenant_id: $(maz902-test-tf-tenantid)
+        TF_VAR_subscription_id: $(maz902-test-tf-subscriptionid)        
+        TF_VAR_acr_password: $(maz902-test-tf-acrpassword)        
+        ARM_ACCESS_KEY: $(maz902-test-tf-armaccesskey)
