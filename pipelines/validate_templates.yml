@@ -1,0 +1,29 @@
+parameters:
+- name: workingDirectory
+  type: string
+  default: ""
+- name: jobname
+  type: string
+  default: ""
+
+jobs:
+  - job: ${{parameters.jobname}}
+    container: tf-image
+    steps:
+      - script: terraform init
+        workingDirectory: ${{parameters.workingDirectory}}
+        displayName: Initialize terraform backend
+        env:
+          ARM_ACCESS_KEY: $(maz902-test-tf-armaccesskey)
+      - script: terraform validate
+        workingDirectory: ${{parameters.workingDirectory}}
+        displayName: Validate terraform configuration
+      - script: terraform fmt
+        workingDirectory: ${{parameters.workingDirectory}}
+        displayName: Auto format terraform code
+      - script: tflint
+        workingDirectory: ${{parameters.workingDirectory}}
+        displayName: Check for code smells with Tflint
+      - script: checkov --quiet --compact --directory .
+        workingDirectory: ${{parameters.workingDirectory}}
+        displayName: Scanning code with Checkov

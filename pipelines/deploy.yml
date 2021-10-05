@@ -1,0 +1,33 @@
+variables:
+  - group: azurenativeNL-msp-terraform-demo
+  - group: inf-paysygo-terraform-azlighthouse-demo
+trigger:
+  branches:
+    include:
+    - feature/*
+  paths:
+    include:
+    - services/azlighthouse/
+
+pool:
+   vmImage: windows-latest
+
+stages:
+  - stage: validate_templates
+    jobs:
+      - template: validate_templates.yml
+        parameters:
+          workingDirectory: 'services/azlighthouse/'
+          jobname: 'servicestest'
+
+  - stage: Deploying_Services
+    dependsOn: 
+    - Deploying_Infrastructure
+    jobs:
+      - template: deploy_services.yml
+        parameters:
+          workingDirectory: 'services/azlighthouse/'
+  
+
+
+
