@@ -14,7 +14,7 @@ stages:
     jobs:
       - template: validate_templates.yml
         parameters:
-          workingDirectory: 'services/azlighthouse/'
+          workingDirectory: 'terraform/azurelighthouse/'
           jobname: 'services'
 
   - stage: Deploy
@@ -23,7 +23,7 @@ stages:
     jobs:
       - template: deploy_services.yml
         parameters:
-          workingDirectory: 'services/azlighthouse/'
+          workingDirectory: 'terraform/azurelighthouse/'
   
 
 
