@@ -11,6 +11,3 @@ resource newResourceGroup 'Microsoft.Resources/resourceGroups@2021-01-01' = {
   location: location
   tags: tags
 }
-
-
-
