@@ -1,5 +1,5 @@
 $getTemplateSpecParameters = @{
-    Name = 'resourcegroup'
+    Name              = 'resourcegroup'
     ResourceGroupName = 'rg-mytemplatespecs'
 }
 #get the Azure Template Spec resource Id with Splatting
@@ -9,15 +9,15 @@ $templateSpecVersionResourceId = $templateSpecResource.Versions | Select-Object 
 # contains the bicep parameters to deploy the resource group
 $templateParameters = @{
     resourceGroupName = 'rg-newrgts'
-    location = 'westeurope'
-    tags = @{'ownedBy' = 'Joe Tahsin'}
+    location          = 'westeurope'
+    tags              = @{'ownedBy' = 'Joe Tahsin' }
 }
 
 # deploy the TS Template - ResourceGroup 
 $DeploymentParameters = @{
-    Location = 'westeurope'
+    Location                = 'westeurope'
     TemplateParameterObject = $templateParameters
-    TemplateSpecId = $templateSpecVersionResourceId
+    TemplateSpecId          = $templateSpecVersionResourceId
 }
 #deployment command azure deployment with Splatting
-New-AzSubscriptionDeployment @DeploymentParameters                   
+New-AzSubscriptionDeployment @DeploymentParameters
