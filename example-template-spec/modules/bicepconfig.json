@@ -8,7 +8,7 @@
   "moduleAliases": {
     "ts": {
       "mytemplatespecs": {
-        "subscription": "1ccdfbc2-d645-489f-9f69-59d425f185c8",
+        "subscription": "yoursubscriptionid",
         "resourceGroup": "rg-templatespecs"
       }
   },
