@@ -1,8 +1,8 @@
 #region example 1 step by step deploy a single resource template spec
 
 $getTemplateSpecParameters = @{
-    Name              = 'resourcegroup'
-    ResourceGroupName = 'rg-templatespecs'
+    Name              = 'virtualNetwork'
+    ResourceGroupName = 'rg-mytemplatespecs'
 }
 #get the Azure Template Spec resource Id with Splatting
 $templateSpecResource = Get-AzTemplateSpec @getTemplateSpecParameters
@@ -10,7 +10,7 @@ $templateSpecVersionResourceId = $templateSpecResource.Versions | Select-Object 
 
 # contains the bicep parameters to deploy the resource group
 $templateParameters = @{
-    resourceGroupName = 'rg-templatespecs'
+    resourceGroupName = 'rg-mytemplatespecs'
     location          = 'westeurope'
     tags              = @{'ownedBy' = 'Joe Tahsin' }
 }

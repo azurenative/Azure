@@ -8,8 +8,8 @@
   "moduleAliases": {
     "ts": {
       "mytemplatespecs": {
-        "subscription": "1ccdfbc2-d645-489f-9f69-59d425f185c8",
-        "resourceGroup": "rg-templatespecs"
+        "subscription": "99fec642-314c-47cd-9cf4-18c06296e9a6",
+        "resourceGroup": "rg-mytemplatespecs"
       }
   },
   "bicep.trace.server": "Messages"
