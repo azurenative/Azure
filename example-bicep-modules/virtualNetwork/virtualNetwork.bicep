@@ -26,3 +26,5 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' = {
     ]
   }
 }
+
+output virtualNetworkName string = virtualNetwork.name
