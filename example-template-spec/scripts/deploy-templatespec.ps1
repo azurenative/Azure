@@ -1,4 +1,16 @@
-# example script will deploy all bicep templates as template spec.
+#region example script will deploy a single bicep template as template spec.
+        $tsParameters = @{
+            Name = "virtualNetwork"
+            ResourceGroupName = "rg-mytemplatespecs"
+            TemplateFile = ".\modules\virtualNetwork\virtualNetwork.bicep"
+            Version = "0.2"
+            Location = 'westeurope'
+        }    
+        New-AzTemplateSpec @tsParameters
+#endregion
+
+
+#region example script will deploy all bicep templates as template spec.
 Function Deploy-TemplateSpec {
     [CmdletBinding()]
     param (
@@ -22,3 +34,4 @@ Function Deploy-TemplateSpec {
 }
 
 Deploy-TemplateSpec -ResourceGroupName "rg-mytemplatespecs" -bicepModulesPath ".\modules" -Verbose
+#endregion
