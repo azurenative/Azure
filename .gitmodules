@@ -1,0 +1,3 @@
+[submodule "AzureModules"]
+	path = AzureModules
+	url = https://github.com/azurenative/AzureModules.git
