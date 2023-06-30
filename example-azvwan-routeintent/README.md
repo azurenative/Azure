@@ -1,0 +1,1 @@
+example of route intent with bicep in Azure VWAN
