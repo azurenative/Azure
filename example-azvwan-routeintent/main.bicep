@@ -6,16 +6,10 @@ metadata generic = {
 }
 @sys.description('The region to deploy all resources into')
 param parLocation string = 'westeurope'
-@sys.description('Id of the azure subscription')
-param parSubscriptionId string = subscription().subscriptionId
-@sys.description('the name of the resource group')
-param parResourceGroupNames array
 @sys.description('name of the virtual network')
 param parVirtualNetworkName string
 @sys.description('address space of the virtual network')
 param parVnetAddressPrefixes array
-@sys.description('the name of the subnet')
-param parSubnetName string
 @sys.description('the name of the virtual wan')
 param parVirtualWanName string
 @sys.description('name of the virtual hub')
@@ -41,57 +35,11 @@ param parDiagnosticLogCategoriesToEnable array = [
   'allLogs'
 ]
 
-@description('Optional. The name of metrics that will be streamed.')
-@allowed([
-  'AllMetrics'
-])
-param parDiagnosticMetricsToEnable array = [
-  'AllMetrics'
-]
-
-var diagnosticsLogsSpecified = [for category in filter(parDiagnosticLogCategoriesToEnable, item => item != 'allLogs'): {
-  category: category
-  enabled: true
-  retentionPolicy: {
-    enabled: true
-    days: parDiagnosticLogsRetentionInDays
+var HubIPAddresses = {
+  publicIPs: {
+    count: 1
   }
-}]
-
-var diagnosticsLogs = contains(parDiagnosticLogCategoriesToEnable, 'allLogs') ? [
-  {
-    categoryGroup: 'allLogs'
-    enabled: true
-    retentionPolicy: {
-      enabled: true
-      days: parDiagnosticLogsRetentionInDays
-    }
-  }
-] : diagnosticsLogsSpecified
-
-var diagnosticsMetrics = [for metric in parDiagnosticMetricsToEnable: {
-  category: metric
-  timeGrain: null
-  enabled: true
-  retentionPolicy: {
-    enabled: true
-    days: parDiagnosticLogsRetentionInDays
-  }
-}]
-
-var parSubnetAddress = cidrSubnet(parVnetAddressPrefixes[0], 24, 1)
-
-var subnetObject = [ parSubnetName, parSubnetAddress ]
-
-module modResourceGroup '../AzureModules/modules/Microsoft.Resources/resourceGroups/deploy.bicep' = [for rg in parResourceGroupNames: {
-  scope: subscription(parSubscriptionId)
-  name: 'mod_${rg}'
-  params: {
-    name: rg
-    location: parLocation
-    enableDefaultTelemetry: false
-  }
-}]
+}
 
 module modLogAnalyticsWorkspace '../AzureModules/modules/Microsoft.OperationalInsights/workspaces/deploy.bicep' = {
   name: 'mod_${parLogAnalyticsWorkspaceName}'
@@ -99,23 +47,22 @@ module modLogAnalyticsWorkspace '../AzureModules/modules/Microsoft.OperationalIn
     name: parLogAnalyticsWorkspaceName
     location: parLocation
     enableDefaultTelemetry: false
+    tags: parTags
   }
 }
 
 module modVirtualNetwork '../AzureModules/modules/microsoft.network/virtualNetworks/deploy.bicep' = {
-  scope: resourceGroup(parSubscriptionId, parResourceGroupNames[1])
   name: 'mod_${parVirtualNetworkName}'
   params: {
     addressPrefixes: parVnetAddressPrefixes
-    subnets: subnetObject
     name: parVirtualNetworkName
     location: parLocation
     enableDefaultTelemetry: false
+    tags: parTags
   }
 }
 
 module modVirtualWan '../AzureModules/modules/microsoft.network/virtualWans/deploy.bicep' = {
-  scope: resourceGroup(parSubscriptionId, parResourceGroupNames[0])
   name: 'mod_${parVirtualWanName}'
   params: {
     name: parVirtualWanName
@@ -129,7 +76,6 @@ module modVirtualWan '../AzureModules/modules/microsoft.network/virtualWans/depl
 }
 
 module modVirtualHub '../AzureModules/modules/Microsoft.Network/virtualHubs/deploy.bicep' = {
-  scope: resourceGroup(parSubscriptionId, parResourceGroupNames[0])
   name: parVirtualHubName
   params: {
     location: parLocation
@@ -147,7 +93,6 @@ module modVirtualHub '../AzureModules/modules/Microsoft.Network/virtualHubs/depl
 }
 
 module modAzFirewall '../AzureModules/modules/microsoft.network/azureFirewalls/deploy.bicep' = {
-  scope: resourceGroup(parSubscriptionId, parResourceGroupNames[0])
   name: 'mod_${parAzFirewallName}'
   params: {
     name: parAzFirewallName
@@ -155,22 +100,26 @@ module modAzFirewall '../AzureModules/modules/microsoft.network/azureFirewalls/d
     azureSkuTier: 'Standard'
     virtualHubId: modVirtualHub.outputs.resourceId
     tags: parTags
+    hubIPAddresses: HubIPAddresses
     enableDefaultTelemetry: false
   }
 }
 
-resource azureFirewall_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: !empty(parDiagnosticSettingsName) ? parDiagnosticSettingsName : '${parAzFirewallName}-diagnosticSettings'
-  properties: {
-    workspaceId: !empty(modLogAnalyticsWorkspace.outputs.resourceId) ? modLogAnalyticsWorkspace.outputs.resourceId : null
-    metrics: diagnosticsMetrics
-    logs: diagnosticsLogs
+module modAFW_diagnosticSettings '../AzureModules/modules/Microsoft.Insights/diagnosticSettings/deploy.bicep' = {
+  scope: subscription('439c1009-ab52-4ec2-820d-1af8b058c9cd')
+  name: 'mod_afwDiagnosticSettings'
+  params: {
+    name: !empty(parDiagnosticSettingsName) ? parDiagnosticSettingsName : '${parAzFirewallName}-diagnosticSettings'
+    location: parLocation
+    enableDefaultTelemetry: false
+    diagnosticWorkspaceId: modLogAnalyticsWorkspace.outputs.resourceId
+    diagnosticLogCategoriesToEnable: parDiagnosticLogCategoriesToEnable
+    diagnosticLogsRetentionInDays: parDiagnosticLogsRetentionInDays
   }
   dependsOn: [
     modAzFirewall
   ]
 }
-
 
 module modHubDefaultRouteTable '../AzureModules/modules/microsoft.network/virtualHubs/hubRouteTables/deploy.bicep' = {
   name: 'mod_defaultHubRouteTable'
@@ -187,7 +136,13 @@ module modHubNoneRouteTable '../AzureModules/modules/microsoft.network/virtualHu
     name: 'noneRouteTable'
     virtualHubName: modVirtualHub.outputs.name
     enableDefaultTelemetry: false
+    labels: [
+      'none'
+    ]
   }
+  dependsOn: [
+    modHubDefaultRouteTable
+  ]
 }
 
 module modFirewallPolicies '../AzureModules/modules/microsoft.network/firewallPolicies/deploy.bicep' = {
@@ -205,12 +160,13 @@ module modFirewallPolicies '../AzureModules/modules/microsoft.network/firewallPo
   ]
 }
 
-module modRouteIntentPolicy 'modules/routeingIntent/routeingIntent.bicep' = {
-  name: 'mod_${parRoutingIntentName}'
+module modRouteIntentPolicy 'modules/routingIntent/routingIntent.bicep' = {
+  name: 'mod_${parRoutingIntentName}-1'
   params: {
     parAzFirewallResourceId: modAzFirewall.outputs.resourceId
     parRoutingIntentName: parRoutingIntentName
     parVirtualHubName: parVirtualHubName
+
   }
   dependsOn: [
     modVirtualHub
